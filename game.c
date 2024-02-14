@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 typedef struct Player {
     int guesses;
@@ -8,6 +9,21 @@ typedef struct Player {
 } Player;
 
 
+
+void sort(Player scores[], int size) {
+    for (int i = 0; i < size; i++) {
+        int min = i;
+        for (int j = i + 1; j < size-1; j++) {
+            if (scores[j].guesses < scores[i].guesses) {
+                min = j;
+            }
+        }
+        Player temp = scores[min];
+        scores[min] = scores[i];
+        scores[i] = temp;
+
+    }
+}
 
 void namePrompt(char* name) {
     printf("Please enter your name to start: ");
@@ -33,7 +49,7 @@ void writeScoresToFile(Player scores[], int scoreCount) {
     if (file) { // probably not necessary since we should always get a file handle
         fprintf(file,"%d\n",scoreCount);
         for (int i = 0; i < scoreCount; i++) {
-            fprintf(file, "%s %d", scores[i].name, scores[i].guesses);
+            fprintf(file, "%s %d\n", scores[i].name, scores[i].guesses);
         }
         fclose(file);
     }
@@ -42,6 +58,14 @@ void writeScoresToFile(Player scores[], int scoreCount) {
     }
 
 }
+
+void displayScores(Player scores[], int scoresCount) {
+    printf("Here are the current leaders: \n");
+    for (int i = 0; i < scoresCount; i++) {
+        printf("%s made %d guesses.\n", scores[i].name, scores[i].guesses);
+    }
+}
+
 
 double getRandom() {
     return rand() % (100+1-10) + 10;
@@ -61,8 +85,9 @@ void PlayGuessingGame() {
     namePrompt(name);
     double squaredNum = getRandom();
     double num = sqrt(squaredNum);
+    sort(scores, scoresCount);
     int guess;
-    int tries;
+    int tries = 0;
     printf("%f is the sqrt of which number?", num);
     while (guess != squaredNum) {
         guess = getGuess();
@@ -76,10 +101,18 @@ void PlayGuessingGame() {
     }
     printf("You Got it!\n");
     printf("You did it in %d guesses.\n",tries);
-    
-
-
+    Player currentPlayer;
+    currentPlayer.guesses = tries;
+    strcpy(currentPlayer.name, name);
+    if (scoresCount != 5) {
+        scores[scoresCount] = currentPlayer;
+        scoresCount++;
+    }
+    sort(scores,scoresCount);
+    displayScores(scores, scoresCount);
+    writeScoresToFile(scores, scoresCount);
 }
+
 int main() {
     char choice;
     printf("Welcome!"); 
